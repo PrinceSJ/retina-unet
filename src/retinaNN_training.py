@@ -29,7 +29,7 @@ from extract_patches import get_data_training
 
 
 
-#Define the neural network
+#Define the unet neural network
 def get_unet(n_ch,patch_height,patch_width):
     inputs = Input(shape=(n_ch,patch_height,patch_width))
     conv1 = Conv2D(32, (3, 3), activation='relu', padding='same',data_format='channels_first')(inputs)
@@ -71,82 +71,6 @@ def get_unet(n_ch,patch_height,patch_width):
 
     return model  
     
-
-#=======================================================
-#Define the neural network resnet-50
-#you need change function call "get_unet" to "get_resnet" in line 226 before use this network
-
-def Conv2d_BN(x, nb_filter, kernel_size, strides=(1, 1), padding='same', name=None):
-    if name is not None:
-        bn_name = name + '_bn'
-        conv_name = name + '_conv'
-    else:
-        bn_name = None
-        conv_name = None
-
-    x = Conv2D(nb_filter, kernel_size, padding=padding, strides=strides, activation='relu', name=conv_name)(x)
-    x = BatchNormalization(axis=3, name=bn_name)(x)
-    return x
-
-
-def bottleneck_Block(inpt,nb_filters,strides=(1,1),with_conv_shortcut=False):
-    k1,k2,k3=nb_filters
-    x = Conv2d_BN(inpt, nb_filter=k1, kernel_size=1, strides=strides, padding='same')
-    x = Conv2d_BN(x, nb_filter=k2, kernel_size=3, padding='same')
-    x = Conv2d_BN(x, nb_filter=k3, kernel_size=1, padding='same')
-    if with_conv_shortcut:
-        shortcut = Conv2d_BN(inpt, nb_filter=k3, strides=strides, kernel_size=1)
-        x = add([x, shortcut])
-        return x
-    else:
-        x = add([x, inpt])
-        return x
-
-def acc_top2(y_true, y_pred):
-    return top_k_categorical_accuracy(y_true, y_pred, k=2)
-
-def resnet_50(channel,height,width,classes=20):
-    inpt = Input(shape=(width, height, channel))
-    x = ZeroPadding2D((3, 3))(inpt)
-    x = Conv2d_BN(x, nb_filter=64, kernel_size=(7, 7), strides=(2, 2), padding='valid')
-    x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same')(x)
-
-    #conv2_x
-    x = bottleneck_Block(x, nb_filters=[64,64,256],strides=(1,1),with_conv_shortcut=True)
-    x = bottleneck_Block(x, nb_filters=[64,64,256])
-    x = bottleneck_Block(x, nb_filters=[64,64,256])
-
-    #conv3_x
-    x = bottleneck_Block(x, nb_filters=[128, 128, 512],strides=(2,2),with_conv_shortcut=True)
-    x = bottleneck_Block(x, nb_filters=[128, 128, 512])
-    x = bottleneck_Block(x, nb_filters=[128, 128, 512])
-    x = bottleneck_Block(x, nb_filters=[128, 128, 512])
-
-    #conv4_x
-    x = bottleneck_Block(x, nb_filters=[256, 256, 1024],strides=(2,2),with_conv_shortcut=True)
-    x = bottleneck_Block(x, nb_filters=[256, 256, 1024])
-    x = bottleneck_Block(x, nb_filters=[256, 256, 1024])
-    x = bottleneck_Block(x, nb_filters=[256, 256, 1024])
-    x = bottleneck_Block(x, nb_filters=[256, 256, 1024])
-    x = bottleneck_Block(x, nb_filters=[256, 256, 1024])
-
-    #conv5_x  
-    x = bottleneck_Block(x, nb_filters=[512, 512, 2048], strides=(2, 2), with_conv_shortcut=True)
-    x = bottleneck_Block(x, nb_filters=[512, 512, 2048])
-    x = bottleneck_Block(x, nb_filters=[512, 512, 2048])
-
-    x = AveragePooling2D(pool_size=(2, 2))(x)
-    x = Flatten()(x)
-    x = Dense(classes, activation='softmax')(x)
-
-    model = Model(inputs=inpt, outputs=x)
-
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc',top_k_categorical_accuracy])
-
-    return model
-
-#==================================================
-
 
 #Define the neural network gnet
 #you need change function call "get_unet" to "get_gnet" in line 166 before use this network
@@ -246,9 +170,7 @@ patch_width = patches_imgs_train.shape[3]
 
 
 #=========== Switch network =================
-#model = get_unet(n_ch, patch_height, patch_width)  #the U-net model
-model = resnet_50(n_ch, patch_height, patch_width)  #the ResNet model
-
+model = get_unet(n_ch, patch_height, patch_width)  #the U-net model
 
 #=========== Construct and save the model arcitecture =====
 print("Check: final output of the network:")
@@ -276,11 +198,11 @@ patches_masks_train = masks_Unet(patches_masks_train)  #reduce memory consumptio
 print("\nPatches_masks_train shape:"+str(patches_masks_train.shape))
 #============  Fit for different network ==================================
 #for unet
-#model.fit(patches_imgs_train, patches_masks_train, nb_epoch=N_epochs, batch_size=batch_size, verbose=2, shuffle=True, validation_split=0.1, callbacks=[checkpointer])  #unet
+model.fit(patches_imgs_train, patches_masks_train, nb_epoch=N_epochs, batch_size=batch_size, verbose=2, shuffle=True, validation_split=0.1, callbacks=[checkpointer])  #unet
 
 #for resnet
-patches_imgs_train = np.transpose(patches_imgs_train,(0,3,2,1))
-model.fit(patches_imgs_train, patches_masks_train, nb_epoch=N_epochs, batch_size=batch_size, verbose=2, shuffle=True, validation_split=0.1, callbacks=[checkpointer])  #resnet50
+# patches_imgs_train = np.transpose(patches_imgs_train,(0,3,2,1))
+# model.fit(patches_imgs_train, patches_masks_train, nb_epoch=N_epochs, batch_size=batch_size, verbose=2, shuffle=True, validation_split=0.1, callbacks=[checkpointer])  #resnet50
 
 
 #========== Save and test the last model ===================
@@ -290,21 +212,3 @@ model.save_weights('./'+name_experiment+'/'+name_experiment +'_last_weights.h5',
 # print('Test score:', score[0])
 # print('Test accuracy:', score[1])
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#
