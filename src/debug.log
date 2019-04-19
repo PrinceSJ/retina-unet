@@ -1,3 +1,7 @@
 #20190408
 Check: final output of the network:
 (None, 20)
+
+#20190409
+to do: debug model.fit in Resnet50_training.py
+'dense_1 dimension should be 2 but (20,1,48,48)'

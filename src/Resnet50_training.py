@@ -69,7 +69,7 @@ def resnet_50(channel,height,width,classes=20):
     x = bottleneck_Block(x, nb_filters=[128, 128, 512])
     x = bottleneck_Block(x, nb_filters=[128, 128, 512])
     x = bottleneck_Block(x, nb_filters=[128, 128, 512])
-
+    
     #conv4_x
     x = bottleneck_Block(x, nb_filters=[256, 256, 1024],strides=(2,2),with_conv_shortcut=True)
     x = bottleneck_Block(x, nb_filters=[256, 256, 1024])
@@ -83,7 +83,7 @@ def resnet_50(channel,height,width,classes=20):
     x = bottleneck_Block(x, nb_filters=[512, 512, 2048])
     x = bottleneck_Block(x, nb_filters=[512, 512, 2048])
 
-    x = AveragePooling2D(pool_size=(2, 2))(x)
+    x = AveragePooling2D(pool_size=(2,2))(x)  # (7,7) in origin resnet
     x = Flatten()(x)
     x = Dense(classes, activation='softmax')(x)
 
@@ -138,8 +138,13 @@ plot(model, to_file='./'+name_experiment+'/'+name_experiment + '_model.png')
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc',top_k_categorical_accuracy])
 print('Model Compiled')
 
+
 patches_imgs_train = np.transpose(patches_imgs_train,(0,3,2,1))
-model.fit(patches_imgs_train,patches_masks_train,epochs=N_epochs,steps_per_epoch=2,validation_steps=2)  
+patches_masks_train = masks_Unet(patches_masks_train)  #reduce memory consumption
+print("\npatches_masks_train shape:"+str(patches_masks_train.shape))
+
+checkpointer = ModelCheckpoint(filepath='./'+name_experiment+'/'+name_experiment +'_best_weights.h5', verbose=1, monitor='val_loss', mode='auto', save_best_only=True) #save at each epoch if the validation decreased
+model.fit(patches_imgs_train,patches_masks_train,epochs=N_epochs,shuffle=True,batch_size=batch_size,verbose=2,validation_split=0.1, callbacks=[checkpointer])#steps_per_epoch=2,validation_steps=2)  
 model.save('./'+name_experiment+'/'+name_experiment +'_last_weights.h5')
 loss,acc,top_acc=model.evaluate_generator(patches_masks_train, steps=64 / batch_size)
 print('Test result:loss:%f,acc:%f,top_acc:%f' % (loss, acc, top_acc))

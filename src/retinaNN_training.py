@@ -193,7 +193,7 @@ checkpointer = ModelCheckpoint(filepath='./'+name_experiment+'/'+name_experiment
 #         return lrate
 #
 # lrate_drop = LearningRateScheduler(step_decay)
-
+#print("\nOrigin Patches_masks_train shape:"+str(patches_masks_train.shape))
 patches_masks_train = masks_Unet(patches_masks_train)  #reduce memory consumption
 print("\nPatches_masks_train shape:"+str(patches_masks_train.shape))
 #============  Fit for different network ==================================
