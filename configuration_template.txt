@@ -1,0 +1,40 @@
+[data paths]
+path_local =  ./experiments
+### train_data_path = ./DRIVE_datasets/dataset__train*.tfrecord
+### test_data_path = ./DRIVE_datasets/dataset__test*.tfrecord
+
+[experiment]
+### name = try
+### arch = unet
+
+[data attributes]
+#Dimensions of the patches extracted from the full images
+patch_height = 48 
+patch_width = 48 
+img_height = 568
+img_width = 568
+patches_per_img = 10816
+
+[training settings]
+# Number of training epochs
+N_epochs = 150
+batch_size = 32
+# if running with nohup
+nohup = False
+
+
+[testing settings]
+# Choose the model to test: best==epoch with min loss, last==last epoch
+best_last = best
+# number of full images for the test
+### imgs_to_visualize = 20 
+
+# How many original-groundTruth-prediction images are visualized in each image
+N_group_visual = 1
+# Compute average in the prediction, improve results but require more patches to be predicted
+average_mode = True
+# Only if average_mode==True. Stride for patch extraction, lower value require more patches to be predicted
+stride_height = 5
+stride_width = 5
+# if running with nohup
+nohup = False

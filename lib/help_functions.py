@@ -1,27 +1,21 @@
-import h5py
 import numpy as np
 from PIL import Image
-from matplotlib import pyplot as plt
+import errno    
+import os
 
-def load_hdf5(infile):
-  with h5py.File(infile,"r") as f:  #"with" close the file after its nested commands
-    return f["image"][()]
 
-def write_hdf5(arr,outfile):
-  with h5py.File(outfile,"w") as f:
-    f.create_dataset("image", data=arr, dtype=arr.dtype)
-
-#convert RGB image in black and white
-def rgb2gray(rgb):
-    assert (len(rgb.shape)==4)  #4D arrays
-    assert (rgb.shape[1]==3)
-    bn_imgs = rgb[:,0,:,:]*0.299 + rgb[:,1,:,:]*0.587 + rgb[:,2,:,:]*0.114
-    bn_imgs = np.reshape(bn_imgs,(rgb.shape[0],1,rgb.shape[2],rgb.shape[3]))
-    return bn_imgs
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 #group a set of images row per columns
-def group_images(data,per_row):
-    assert data.shape[0]%per_row==0
+def group_images(data, per_row):
+    assert data.shape[0] % per_row==0
     assert (data.shape[1]==1 or data.shape[1]==3)
     data = np.transpose(data,(0,2,3,1))  #corect format for imshow
     all_stripe = []
@@ -71,21 +65,13 @@ def masks_Unet(masks):
 
 def pred_to_imgs(pred, patch_height, patch_width, mode="original"):
     assert (len(pred.shape)==3)  #3D array: (Npatches,height*width,2)
-    assert (pred.shape[2]==2 )  #check the classes are 2
-    pred_images = np.empty((pred.shape[0],pred.shape[1]))  #(Npatches,height*width)
-    if mode=="original":
-        for i in range(pred.shape[0]):
-            for pix in range(pred.shape[1]):
-                pred_images[i,pix]=pred[i,pix,1]
-    elif mode=="threshold":
-        for i in range(pred.shape[0]):
-            for pix in range(pred.shape[1]):
-                if pred[i,pix,1]>=0.5:
-                    pred_images[i,pix]=1
-                else:
-                    pred_images[i,pix]=0
+    assert (pred.shape[1]==2)  #check the classes are 2
+    if mode == "original":
+        pred = pred[:,1]
+    elif mode == "threshold":
+        pred = np.amax(pred, axis=1)
     else:
         print("mode " +str(mode) +" not recognized, it can be 'original' or 'threshold'")
         exit()
-    pred_images = np.reshape(pred_images,(pred_images.shape[0],1, patch_height, patch_width))
+    pred_images = np.reshape(pred,(pred.shape[0], 1, patch_height, patch_width))
     return pred_images

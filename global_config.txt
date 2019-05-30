@@ -1,0 +1,42 @@
+# ================= img paths ======================
+[DRIVE]
+#train
+original_imgs_train = ./DRIVE/training/images/
+groundTruth_imgs_train = ./DRIVE/training/1st_manual/
+borderMasks_imgs_train = ./DRIVE/training/mask/
+#test
+original_imgs_test = ./DRIVE/test/images/
+groundTruth_imgs_test = ./DRIVE/test/1st_manual/
+borderMasks_imgs_test = ./DRIVE/test/mask/
+path = ./DRIVE_datasets/
+N_imgs_test = 20
+N_imgs_train = 20
+
+[Synth]
+#train
+original_imgs_train = ./Synth/train/images/
+groundTruth_imgs_train = ./Synth/train/groundtruths/
+borderMasks_imgs_train = ./DRIVE/test/mask/
+#test
+original_imgs_test = ./Synth/test/images/
+groundTruth_imgs_test = ./Synth/test/groundtruths/
+borderMasks_imgs_test = ./DRIVE/test/mask/
+path = ./Synth_datasets/
+N_imgs_test = 1000
+#1000
+N_imgs_train = 9000
+#9000
+
+[global]
+average_mode = True
+stride_height = 5
+stride_width = 5
+subimgs_per_dim = 104
+imgs_to_visualize = 5
+#20
+
+[data attributes]
+#Dimensions of the patches extracted from the full images
+patch_height = 48 
+patch_width = 48
+inside_FOV = False

@@ -1,4 +1,14 @@
 *~
 *.pyc
 .DS_Store
+__MAC*
 DRIVE_datasets_training_testing
+DRIVE_datasets_training_testin
+DRIVE_DRIVE*
+DRIVE_Synth*
+Synth*
+*.hdf5
+*.tfrecord
+experiments
+*.h5 
+*.png
