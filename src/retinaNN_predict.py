@@ -207,6 +207,7 @@ plt.savefig(path_experiment + "_Precision_recall.png")
 # Confusion matrix
 confusion = np.array([[true_positives, false_positives], [true_negatives, false_negatives]])
 print(confusion)
+
 if float(np.sum(confusion))!=0:
     accuracy = float(confusion[0,0]+confusion[1,1])/float(np.sum(confusion))
 print("Global Accuracy: " +str(accuracy))

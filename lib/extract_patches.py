@@ -43,7 +43,6 @@ def _extract_patches(full_imgs, patch_size, stride_size, overlap):
     # print("number of patches per image: " + str(patches_per_img))
     N_patches_tot = patches_per_img * full_imgs.shape[0]
     patches = np.empty((N_patches_tot, full_imgs.shape[1], patch_size[0], patch_size[1]))
-
     iter_tot = 0   #iter over the total number of patches (N_patches)
     for i in range(full_imgs.shape[0]):  #loop over the full images
         img = full_imgs[i]
@@ -127,7 +126,6 @@ def recompone(data, N_h, N_w):
         k += 1
     assert (k == N_full_imgs)
     return full_recomp
-
 
 #return only the pixels contained in the FOV, for both images and masks
 def pred_only_FOV(data_imgs,data_masks,original_imgs_border_masks):

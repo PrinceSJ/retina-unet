@@ -31,7 +31,6 @@ from resnet import UResNet34
 session = K.get_session()
 
 #========= Load settings from Config file =====================================
-
 config = configparser.RawConfigParser()
 config.read('configuration.txt')
 
