@@ -149,6 +149,9 @@ pred_imgs = recompone_overlap(
 #     stride_size[1]
 # ) * 255
 
+assert(np.max(pred_imgs) <= 255)
+assert(np.min(pred_imgs) >= 0)
+
 # print("Orig imgs shape: " +str(orig_imgs.shape))
 print("pred imgs shape: " +str(pred_imgs.shape))
 # print("Gtruth imgs shape: " +str(gtruth_masks.shape))
