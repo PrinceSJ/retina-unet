@@ -4,5 +4,5 @@ new_image_width = 568
 subimages_per_image = 11025
 mean_images = 106.45124156352355
 std_images = 53.43207952858237
-mean_groundtruths = 25.302749360276515
-std_groundtruths = 71.64786718838455
+mean_groundtruths = 25.30274936027652
+std_groundtruths = 71.64786718838454
