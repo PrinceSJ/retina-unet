@@ -14,6 +14,7 @@ from matplotlib import pyplot as plt
 #Keras
 from tensorflow.keras.models import model_from_json
 from tensorflow.keras.models import Model
+from tensorflow.keras.metrics import BinaryAccuracy, Precision, Recall, TruePositives, TrueNegatives, FalsePositives, FalseNegatives
 import tensorflow as tf
 import tensorflow.keras.backend as K
 
@@ -90,6 +91,22 @@ iterator = dataset.make_one_shot_iterator()
 # patches_embedding = patches_embedding[:n_samples]
 # patches_embedding_gt = patches_gts_samples[:n_samples]
 
+
+# orig_imgs = recompone_overlap(
+#     patches_embedding,
+#     full_img_height,
+#     full_img_width,
+#     stride_size[0],
+#     stride_size[1]
+# ) * 255
+# gtruth_masks = recompone_overlap(
+#     patches_embedding_gt,
+#     full_img_height,
+#     full_img_width,
+#     stride_size[0],
+#     stride_size[1]
+# ) * 255
+
 #================ Run the prediction of the patches ==================================
 best_last = config.get('testing settings', 'best_last')
 
@@ -103,13 +120,17 @@ model.compile(
     optimizer = 'sgd',
     loss = weighted_cross_entropy(9),
     metrics = [
-        # tf.keras.metrics.SensitivityAtSpecificity(), # auc roc
-        # tf.keras.metrics.SpecificityAtSensetivity(), # auc roc
-        tf.keras.metrics.TruePositives(),
-        tf.keras.metrics.FalsePositives(),
-        tf.keras.metrics.TrueNegatives(),
-        tf.keras.metrics.FalseNegatives() # confusion
-    ]
+        # SensitivityAtSpecificity(), # auc roc
+        # SpecificityAtSensetivity(), # auc roc
+        BinaryAccuracy()
+        Precision(),
+        Recall(),
+        TruePositives(),
+        FalsePositives(),
+        TrueNegatives(),
+        FalseNegatives() # confusion
+    ],
+    verbose = 1
 )
 model.load_weights(experiment_path + '/' + name_experiment + '_' + best_last + '_weights.h5')
 
@@ -141,20 +162,6 @@ pred_imgs = recompone_overlap(
     stride_size[0],
     stride_size[1]
 ) * 255
-# orig_imgs = recompone_overlap(
-#     patches_embedding,
-#     full_img_height,
-#     full_img_width,
-#     stride_size[0],
-#     stride_size[1]
-# ) * 255
-# gtruth_masks = recompone_overlap(
-#     patches_embedding_gt,
-#     full_img_height,
-#     full_img_width,
-#     stride_size[0],
-#     stride_size[1]
-# ) * 255
 
 assert(np.max(pred_imgs) <= 255)
 assert(np.min(pred_imgs) >= 0)
@@ -192,28 +199,28 @@ eval_values = model.evaluate(
 )
 
 print(eval_values)
-true_positives, false_positives, true_negatives, false_negatives = eval_values
+loss, acc, precision, recall, true_positives, false_positives, true_negatives, false_negatives = eval_values
 
 # Area under the ROC curve
-roc_curve=plt.figure()
-print(sensitivities.shape)
-print(specificities.shape)
-# plt.plot(fpr,tpr,'-',label='Area Under the Curve (AUC = %0.4f)' % auc )
-plt.title('ROC curve')
-plt.xlabel("FPR (False Positive Rate)")
-plt.ylabel("TPR (True Positive Rate)")
-plt.legend(loc = "lower right")
-plt.savefig(save_path + "_ROC.png")
+# roc_curve = plt.figure()
+# print(sensitivities.shape)
+# print(specificities.shape)
+# # plt.plot(fpr,tpr,'-',label='Area Under the Curve (AUC = %0.4f)' % auc )
+# plt.title('ROC curve')
+# plt.xlabel("FPR (False Positive Rate)")
+# plt.ylabel("TPR (True Positive Rate)")
+# plt.legend(loc = "lower right")
+# plt.savefig(save_path + "_ROC.png")
 
 # Precision-recall curve
 # print("\nArea under Precision-Recall curve: " +str(AUC_prec_rec))
 prec_rec_curve = plt.figure()
-# plt.plot(recall,precision,'-',label='Area Under the Curve (AUC = %0.4f)' % AUC_prec_rec)
-plt.title('Precision - Recall curve')
-plt.xlabel("Recall")
-plt.ylabel("Precision")
-plt.legend(loc = "lower right")
-plt.savefig(path_experiment + "_Precision_recall.png")
+prec_rec_curve.plot(recall, precision, '-', label = 'Area Under the Curve (AUC = %0.4f)' % AUC_prec_rec)
+prec_rec_curve.title('Precision - Recall curve')
+prec_rec_curve.xlabel("Recall")
+prec_rec_curve.ylabel("Precision")
+prec_rec_curve.legend(loc = "lower right")
+prec_rec_curve.savefig(save_path + "_Precision_recall.png")
 
 # Confusion matrix
 confusion = np.array([[true_positives, false_positives], [true_negatives, false_negatives]])
