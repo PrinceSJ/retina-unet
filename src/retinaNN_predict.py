@@ -120,17 +120,12 @@ model.compile(
     optimizer = 'sgd',
     loss = weighted_cross_entropy(9),
     metrics = [
-        # SensitivityAtSpecificity(), # auc roc
-        # SpecificityAtSensetivity(), # auc roc
-        BinaryAccuracy()
-        Precision(),
-        Recall(),
-        TruePositives(),
-        FalsePositives(),
-        TrueNegatives(),
-        FalseNegatives() # confusion
-    ],
-    verbose = 1
+        BinaryAccuracy(),
+        TruePositives(num_tresholds = 200),
+        FalsePositives(num_tresholds = 200),
+        TrueNegatives(num_tresholds = 200),
+        FalseNegatives(num_tresholds = 200) # confusion
+    ]
 )
 model.load_weights(experiment_path + '/' + name_experiment + '_' + best_last + '_weights.h5')
 
@@ -195,27 +190,29 @@ print("\n\n========  Evaluate the results =======================")
 eval_values = model.evaluate(
     dataset,
     batch_size = batch_size,
-    steps = int(N_subimgs / batch_size)
+    steps = int(N_subimgs / batch_size),
+    verbose = 1
 )
 
 print(eval_values)
-loss, acc, precision, recall, true_positives, false_positives, true_negatives, false_negatives = eval_values
+loss, true_positives, false_positives, true_negatives, false_negatives = eval_values
 
 # Area under the ROC curve
-# roc_curve = plt.figure()
-# print(sensitivities.shape)
-# print(specificities.shape)
-# # plt.plot(fpr,tpr,'-',label='Area Under the Curve (AUC = %0.4f)' % auc )
-# plt.title('ROC curve')
-# plt.xlabel("FPR (False Positive Rate)")
-# plt.ylabel("TPR (True Positive Rate)")
-# plt.legend(loc = "lower right")
-# plt.savefig(save_path + "_ROC.png")
+tpr = true_positives / (true_positives + false_negatives)
+fpr = false_positives / (false_positives + true_negatives)
+roc_curve = plt.figure()
+roc_curve.plot(fpr,tpr,'-',label='Area Under the Curve (AUC = %0.4f)' % auc )
+roc_curve.title('ROC curve')
+roc_curve.xlabel("FPR (False Positive Rate)")
+roc_curve.ylabel("TPR (True Positive Rate)")
+roc_curve.legend(loc = "lower right")
+roc_curve.savefig(save_path + "_ROC.png")
 
 # Precision-recall curve
 # print("\nArea under Precision-Recall curve: " +str(AUC_prec_rec))
+precision = true_positives / (true_positives + false_positives)
 prec_rec_curve = plt.figure()
-prec_rec_curve.plot(recall, precision, '-', label = 'Area Under the Curve (AUC = %0.4f)' % AUC_prec_rec)
+prec_rec_curve.plot(tpr, precision, '-', label = 'Area Under the Curve (AUC = %0.4f)' % AUC_prec_rec)
 prec_rec_curve.title('Precision - Recall curve')
 prec_rec_curve.xlabel("Recall")
 prec_rec_curve.ylabel("Precision")
@@ -223,7 +220,7 @@ prec_rec_curve.legend(loc = "lower right")
 prec_rec_curve.savefig(save_path + "_Precision_recall.png")
 
 # Confusion matrix
-confusion = np.array([[true_positives, false_positives], [true_negatives, false_negatives]])
+confusion = np.array([[true_positives[99], false_positives[99]], [true_negatives[99], false_negatives[99]]])
 print(confusion)
 
 if float(np.sum(confusion))!=0:
