@@ -2,7 +2,7 @@ from tensorflow.keras.layers import Input, Conv2D, Dropout, MaxPooling2D, UpSamp
 from tensorflow.keras.models import Model
 
 
-def get_unet(n_ch, batch_size, patch_height, patch_width):
+def get_unet(n_ch, batch_size, patch_height, patch_width, train=True):
     inputs = Input(batch_shape=(batch_size, n_ch, patch_height, patch_width), name="input")
     conv1 = Conv2D(32, (3, 3), activation='relu', padding='same', data_format='channels_first')(inputs)
     conv1 = Dropout(0.2)(conv1)
@@ -33,7 +33,8 @@ def get_unet(n_ch, batch_size, patch_height, patch_width):
     conv6 = Conv2D(2, (1, 1), padding='same', data_format='channels_first', name="output")(conv5)
     conv7 = Reshape((2, patch_height * patch_width))(conv6)
     ############
-    # conv7 = Activation('softmax')(conv7)
+    if not train:
+        conv7 = Activation('sigmoid')(conv7)
 
     model = Model(inputs=inputs, outputs=conv7)
     return model 

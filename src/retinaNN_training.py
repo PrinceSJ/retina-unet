@@ -83,7 +83,7 @@ else:
 
 model.compile(
     optimizer = 'adam',
-    loss = weighted_cross_entropy(0.9 / 0.1),
+    loss = weighted_cross_entropy(0.1 / 0.9),
     # loss = 'categorical_crossentropy',
     metrics = [accuracy]
 )

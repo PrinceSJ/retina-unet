@@ -24,6 +24,8 @@ from loader import load_testset
 from extract_patches import recompone
 from extract_patches import recompone_overlap
 from nn_utils import *
+from unet import *
+from resnet import *
 
 session = K.get_session()
 
@@ -53,6 +55,8 @@ arch = config.get('experiment', 'arch')
 testset = config.get('experiment', 'testset')
 experiment_path = path_data + '/' + name_experiment + '_' + arch
 save_path = experiment_path + '/' + testset
+
+u_net = arch == 'unet'
 
 #N full images to be predicted
 imgs_to_visualize = int(config.get('testing settings', 'imgs_to_visualize'))
@@ -90,9 +94,11 @@ iterator = dataset.make_one_shot_iterator()
 best_last = config.get('testing settings', 'best_last')
 
 #Load the saved model
-model = model_from_json(
-    open(experiment_path + '/' + name_experiment +'_architecture.json').read()
-)
+if u_net:
+    model = get_unet(1, batch_size, patch_size[0], patch_size[1], False)  #the U-net model
+else:
+    model = UResNet34(input_shape=(1, patch_size[0], patch_size[1]))
+
 model.compile(
     optimizer = 'sgd',
     loss = weighted_cross_entropy(9),
@@ -109,20 +115,21 @@ model.load_weights(experiment_path + '/' + name_experiment + '_' + best_last + '
 
 print("start prediction")
 #Calculate the predictions
-predictions = sigmoid(model.predict(
-    dataset,
+samples_to_predict = np.ceil(patches_per_img * imgs_to_visualize / batch_size) * batch_size
+predictions = model.predict(
+    dataset.take(samples_to_predict),
     batch_size = batch_size,
-    steps = int(N_subimgs / batch_size)
-))
+    steps = int(samples_to_predict / batch_size)
+)
+
+predictions = predictions[:patches_per_img * imgs_to_visualize]
 
 print("predicted images size :")
 print(predictions.shape)
 
 #===== Convert the prediction arrays in corresponding images
-# get patches for visualization
-vis_patches_predictions = predictions[:patches_per_img * imgs_to_visualize]
 
-pred_patches = pred_to_imgs(vis_patches_predictions, patch_size[0], patch_size[1], "threshold")
+pred_patches = pred_to_imgs(predictions, patch_size[0], patch_size[1], "original")
 print(np.max(pred_patches))
 print(np.min(pred_patches))
 
@@ -157,6 +164,7 @@ print("pred imgs shape: " +str(pred_imgs.shape))
 # print("Gtruth imgs shape: " +str(gtruth_masks.shape))
 # visualize(group_images(orig_imgs, N_visual), save_path + "_all_originals")#.show()
 visualize(group_images(pred_imgs, N_visual), save_path + "_all_predictions")#.show()
+
 # visualize(group_images(gtruth_masks,N_visual), save_path + "_all_groundTruths")#.show()
 #visualize results comparing mask and prediction:
 # assert (orig_imgs.shape[0]==pred_imgs.shape[0] and orig_imgs.shape[0]==gtruth_masks.shape[0])
@@ -175,16 +183,16 @@ visualize(group_images(pred_imgs, N_visual), save_path + "_all_predictions")#.sh
 #========================== Evaluate the results ===================================
 print("\n\n========  Evaluate the results =======================")
 
-sensitivities,
-specificities,
-true_positives,
-false_positives,
-true_negatives,
-false_negatives = model.evaluate(
+# sensitivities,
+# specificities,
+eval_values = model.evaluate(
     dataset,
     batch_size = batch_size,
     steps = int(N_subimgs / batch_size)
 )
+
+print(eval_values)
+true_positives, false_positives, true_negatives, false_negatives = eval_values
 
 # Area under the ROC curve
 roc_curve=plt.figure()
