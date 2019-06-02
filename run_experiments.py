@@ -60,3 +60,5 @@ for arch in archs:
         config.write(f)
 
       os.system('python run_testing.py')
+      break
+    break

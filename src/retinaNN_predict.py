@@ -116,15 +116,16 @@ if u_net:
 else:
     model = UResNet34(input_shape=(1, patch_size[0], patch_size[1]))
 
+thresholds = np.linspace(0, 1, 200).tolist()
 model.compile(
     optimizer = 'sgd',
     loss = weighted_cross_entropy(9),
     metrics = [
         BinaryAccuracy(),
-        TruePositives(num_tresholds = 200),
-        FalsePositives(num_tresholds = 200),
-        TrueNegatives(num_tresholds = 200),
-        FalseNegatives(num_tresholds = 200) # confusion
+        TruePositives(thresholds = thresholds),
+        FalsePositives(thresholds = thresholds),
+        TrueNegatives(thresholds = thresholds),
+        FalseNegatives(thresholds = thresholds) # confusion
     ]
 )
 model.load_weights(experiment_path + '/' + name_experiment + '_' + best_last + '_weights.h5')
