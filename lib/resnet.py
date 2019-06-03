@@ -67,6 +67,7 @@ def Transpose2D_block(filters, stage, kernel_size=(3,3), upsample_rate=(2,2),
 def build_unet(backbone, classes, last_block_filters, skip_layers,
                n_upsample_blocks=5, upsample_rates=(2,2,2,2,2),
                block_type='upsampling', activation='sigmoid',
+               withActivation=False
                **kwargs):
 
     input = backbone.input
@@ -95,7 +96,8 @@ def build_unet(backbone, classes, last_block_filters, skip_layers,
         activation = 'sigmoid'
    
     x = Conv2D(classes, (3,3), padding='same', data_format='channels_first', name='final_conv')(x)
-    x = Activation(activation, name=activation)(x)
+    if withActivation:
+        x = Activation(activation, name=activation)(x)
 
     model = Model(input, x)
 

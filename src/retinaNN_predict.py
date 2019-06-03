@@ -25,8 +25,8 @@ from loader import load_testset
 from extract_patches import recompone
 from extract_patches import recompone_overlap
 from nn_utils import *
-from unet import *
-from resnet import *
+from unet import get_unet
+from resnet import UResNet
 
 session = K.get_session()
 
@@ -112,9 +112,9 @@ best_last = config.get('testing settings', 'best_last')
 
 #Load the saved model
 if u_net:
-    model = get_unet(1, batch_size, patch_size[0], patch_size[1], False)  #the U-net model
+    model = get_unet(1, batch_size, patch_size[0], patch_size[1], withActivation=True)  #the U-net model
 else:
-    model = UResNet34(input_shape=(1, patch_size[0], patch_size[1]))
+    model = UResNet(input_shape=(1, patch_size[0], patch_size[1]), withActivation=True)
 
 thresholds = np.linspace(0, 1, 200).tolist()
 model.compile(
