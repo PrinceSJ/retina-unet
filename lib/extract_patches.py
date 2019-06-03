@@ -86,16 +86,9 @@ def recompone_overlap(preds, img_h, img_w, stride_h, stride_w):
                 k += 1
 
     assert(k==preds.shape[0])
-    print(np.max(full_prob))
-    print(np.max(full_sum))
-    print(np.min(full_prob))
-    print(np.min(full_sum))
     assert(np.max(full_sum)>=1.0)  #at least one
     full_sum[full_sum == 0.] = 1
     final_avg = full_prob / full_sum
-    print(final_avg.shape)
-    print(np.max(final_avg))
-    print(np.min(final_avg))
     assert(np.max(final_avg)<=1.0) #max value for a pixel is 1.0
     assert(np.min(final_avg)>=0.0) #min value for a pixel is 0.0
     return final_avg

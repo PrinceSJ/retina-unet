@@ -141,14 +141,9 @@ predictions = model.predict(
 
 predictions = predictions[:patches_per_img * imgs_to_visualize]
 
-print("predicted images size :")
-print(predictions.shape)
-
 #===== Convert the prediction arrays in corresponding images
 
 pred_patches = pred_to_imgs(predictions, patch_size[0], patch_size[1], "original")
-print(np.max(pred_patches))
-print(np.min(pred_patches))
 
 # #========== Elaborate and visualize the predicted images ====================
 pred_imgs = recompone_overlap(
@@ -189,36 +184,36 @@ eval_values = model.evaluate(
     dataset,
     batch_size = batch_size,
     steps = int(N_subimgs / batch_size),
-    verbose = 1
+    verbose = 2
 )
 
-print(eval_values)
-loss, true_positives, false_positives, true_negatives, false_negatives = eval_values
+_, acc, true_positives, false_positives, true_negatives, false_negatives = eval_values
 
 # Area under the ROC curve
 tpr = true_positives / (true_positives + false_negatives)
 fpr = false_positives / (false_positives + true_negatives)
 roc_curve = plt.figure()
-roc_curve.plot(fpr,tpr,'-',label='Area Under the Curve (AUC = %0.4f)' % auc )
-roc_curve.title('ROC curve')
-roc_curve.xlabel("FPR (False Positive Rate)")
-roc_curve.ylabel("TPR (True Positive Rate)")
-roc_curve.legend(loc = "lower right")
-roc_curve.savefig(save_path + "_ROC.png")
+plt.plot(fpr,tpr,'-',label='Area Under the Curve' )
+plt.title('ROC curve')
+plt.xlabel("FPR (False Positive Rate)")
+plt.ylabel("TPR (True Positive Rate)")
+plt.legend(loc = "lower right")
+plt.savefig(save_path + "_ROC.png")
 
 # Precision-recall curve
 # print("\nArea under Precision-Recall curve: " +str(AUC_prec_rec))
 precision = true_positives / (true_positives + false_positives)
 prec_rec_curve = plt.figure()
-prec_rec_curve.plot(tpr, precision, '-', label = 'Area Under the Curve (AUC = %0.4f)' % AUC_prec_rec)
-prec_rec_curve.title('Precision - Recall curve')
-prec_rec_curve.xlabel("Recall")
-prec_rec_curve.ylabel("Precision")
-prec_rec_curve.legend(loc = "lower right")
-prec_rec_curve.savefig(save_path + "_Precision_recall.png")
+plt.plot(tpr, precision, '-', label = 'Area Under the Curve')
+plt.title('Precision - Recall curve')
+plt.xlabel("Recall")
+plt.ylabel("Precision")
+plt.legend(loc = "lower right")
+plt.savefig(save_path + "_Precision_recall.png")
 
 # Confusion matrix
 confusion = np.array([[true_positives[99], false_positives[99]], [true_negatives[99], false_negatives[99]]])
+confusion /= np.sum(confusion)
 print(confusion)
 
 if float(np.sum(confusion))!=0:
@@ -238,7 +233,7 @@ if float(confusion[1,1]+confusion[0,1])!=0:
 print("Precision: " +str(precision))
 
 #Save the results
-with open(path_experiment+'performances.txt', 'w') as file:
+with open(save_path + 'performances.txt', 'w') as file:
     file.write(
         "Confusion matrix:"
         + str(confusion)
