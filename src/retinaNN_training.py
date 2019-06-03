@@ -13,9 +13,7 @@ import configparser
 
 import tensorflow as tf
 from datetime import datetime
-from tensorflow.python.keras.callbacks import TensorBoard
-
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from tensorflow.keras.utils import plot_model as plot
 from tensorflow.python.ops import math_ops
 import tensorflow.keras.backend as K
@@ -113,6 +111,12 @@ tensorboard = ImageTensorBoard(
     histogram_freq = 5
 )
 
+earlyStopping = EarlyStopping(
+    min_delta=1e-5,
+    patience=10,
+    mode='min',
+)
+
 model.fit(
     train_dataset,
     epochs = N_epochs,
@@ -120,7 +124,7 @@ model.fit(
     validation_data = test_dataset,
     validation_steps = 10,
     verbose = 1,
-    callbacks = [checkpointer, tensorboard])
+    callbacks = [checkpointer, tensorboard, earlyStopping])
 
 #========== Save and test the last model ==================================
 model.save_weights(experiment_path + '/' + name_experiment +'_last_weights.h5', overwrite=True)

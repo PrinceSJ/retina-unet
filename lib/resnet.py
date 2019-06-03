@@ -67,7 +67,7 @@ def Transpose2D_block(filters, stage, kernel_size=(3,3), upsample_rate=(2,2),
 def build_unet(backbone, classes, last_block_filters, skip_layers,
                n_upsample_blocks=5, upsample_rates=(2,2,2,2,2),
                block_type='upsampling', activation='sigmoid',
-               withActivation=False
+               withActivation=False,
                **kwargs):
 
     input = backbone.input

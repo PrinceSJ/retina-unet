@@ -64,12 +64,12 @@ def masks_Unet(masks):
 
 
 def pred_to_imgs(pred, patch_height, patch_width, mode="original"):
-    assert (len(pred.shape)==3)  #3D array: (Npatches,height*width,2)
+    assert (len(pred.shape)==4)  #3D array: (Npatches, 2, height, width)
     assert (pred.shape[1]==2)  #check the classes are 2
     if mode == "original":
-        pred = pred[:,1]
+        pred = pred[:, 1]
     elif mode == "threshold":
-        pred = np.amax(pred, axis=1)
+        pred = np.amax(pred, axis=3)
     else:
         print("mode " +str(mode) +" not recognized, it can be 'original' or 'threshold'")
         exit()
