@@ -103,6 +103,6 @@ def _parse_function(proto):
 
     # Bring your picture back in shape
     image = tf.reshape(image, [1, PATCH_SIZE[0], PATCH_SIZE[1]])
-    label = tf.reshape(label, [1, PATCH_SIZE[0] * PATCH_SIZE[1]])
+    label = tf.reshape(label, [1, PATCH_SIZE[0], PATCH_SIZE[1]])
     
     return image, label
