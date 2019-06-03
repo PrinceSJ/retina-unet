@@ -50,7 +50,7 @@ for arch in archs:
     # os.system('python run_training.py')
     
     for testset in settings:
-      config.set('experiment', 'testset', experiment)
+      config.set('experiment', 'testset', testset)
       config.set('data paths', 'test_data_path', './' + testset + '_datasets/dataset__test*.tfrecord')
       config.set('data paths', 'test_data_stats', './' + testset + '_datasets/stats_test.txt')
       config.set('testing settings', 'N_subimgs', eval(testset + '_testimgs'))

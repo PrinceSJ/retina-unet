@@ -233,7 +233,7 @@ if float(confusion[1,1]+confusion[0,1])!=0:
 print("Precision: " +str(precision))
 
 #Save the results
-with open(save_path + 'performances.txt', 'w') as file:
+with open(save_path + '_performances.txt', 'w') as file:
     file.write(
         "Confusion matrix:"
         + str(confusion)
