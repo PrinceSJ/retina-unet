@@ -21,20 +21,19 @@ def Upsample2D_block(filters, stage, kernel_size=(3,3), upsample_rate=(2,2),
 
         conv_name, bn_name, relu_name, up_name = handle_block_names(stage)
 
-        x = UpSampling2D(size=upsample_rate, name=up_name)(input_tensor)
+        x = UpSampling2D(size=upsample_rate, name=up_name, data_format='channels_first')(input_tensor)
 
         if skip is not None:
-            print("x: "+str(x.shape)+"\nskip: "+str(skip.shape))
-            x = Concatenate()([x, skip])
+            x = Concatenate(axis=CHANNEL_AXIS)([x, skip])
 
-        x = Conv2D(filters, kernel_size, padding='same', name=conv_name+'1')(x)
+        x = Conv2D(filters, kernel_size, padding='same', data_format='channels_first', name=conv_name+'1')(x)
         if batchnorm:
-            x = BatchNormalization(name=bn_name+'1')(x)
+            x = BatchNormalization(name=bn_name+'1', axis=CHANNEL_AXIS)(x)
         x = Activation('relu', name=relu_name+'1')(x)
 
-        x = Conv2D(filters, kernel_size, padding='same', name=conv_name+'2')(x)
+        x = Conv2D(filters, kernel_size, padding='same', data_format='channels_first', name=conv_name+'2')(x)
         if batchnorm:
-            x = BatchNormalization(name=bn_name+'2')(x)
+            x = BatchNormalization(name=bn_name+'2', axis=CHANNEL_AXIS)(x)
         x = Activation('relu', name=relu_name+'2')(x)
 
         return x
@@ -49,17 +48,17 @@ def Transpose2D_block(filters, stage, kernel_size=(3,3), upsample_rate=(2,2),
         conv_name, bn_name, relu_name, up_name = handle_block_names(stage)
 
         x = Conv2DTranspose(filters, transpose_kernel_size, strides=upsample_rate,
-                            padding='same', name=up_name)(input_tensor)
+                            padding='same', data_format='channels_first', name=up_name)(input_tensor)
         if batchnorm:
-            x = BatchNormalization(name=bn_name+'1')(x)
+            x = BatchNormalization(name=bn_name+'1', axis=CHANNEL_AXIS)(x)
         x = Activation('relu', name=relu_name+'1')(x)
 
         if skip is not None:
-            x = Concatenate()([x, skip])
+            x = Concatenate(axis=CHANNEL_AXIS)([x, skip])
 
-        x = Conv2D(filters, kernel_size, padding='same', name=conv_name+'2')(x)
+        x = Conv2D(filters, kernel_size, padding='same', data_format='channels_first', name=conv_name+'2')(x)
         if batchnorm:
-            x = BatchNormalization(name=bn_name+'2')(x)
+            x = BatchNormalization(name=bn_name+'2', axis=CHANNEL_AXIS)(x)
         x = Activation('relu', name=relu_name+'2')(x)
 
         return x
@@ -82,24 +81,20 @@ def build_unet(backbone, classes, last_block_filters, skip_layers,
                     for l in skip_layers])
     
     for i in range(n_upsample_blocks):
-        
         # check if there is a skip connection
         if i < len(skip_layers):
-#             print(backbone.layers[skip_layers[i]])
-            #print(backbone.layers[skip_layers[i]].output)
             skip = backbone.layers[skip_layers[i]].output
         else:
             skip = None
 
         up_size = (upsample_rates[i], upsample_rates[i])
         filters = last_block_filters * 2**(n_upsample_blocks-(i+1))
-        #print("Hahah!")
         x = up_block(filters, i, upsample_rate=up_size, skip=skip, **kwargs)(x)
-        #print("Wocao!!")
+
     if classes < 2:
         activation = 'sigmoid'
    
-    x = Conv2D(classes, (3,3), padding='same', name='final_conv')(x)
+    x = Conv2D(classes, (3,3), padding='same', data_format='channels_first', name='final_conv')(x)
     x = Activation(activation, name=activation)(x)
 
     model = Model(input, x)
@@ -127,6 +122,7 @@ def _conv_bn_relu(**conv_params):
     def f(input):
         conv = Conv2D(filters=filters, kernel_size=kernel_size,
                       strides=strides, padding=padding,
+                      data_format='channels_first',
                       kernel_initializer=kernel_initializer,
                       kernel_regularizer=kernel_regularizer)(input)
         return _bn_relu(conv)
@@ -149,6 +145,7 @@ def _bn_relu_conv(**conv_params):
         activation = _bn_relu(input)
         return Conv2D(filters=filters, kernel_size=kernel_size,
                       strides=strides, padding=padding,
+                      data_format='channels_first',
                       kernel_initializer=kernel_initializer,
                       kernel_regularizer=kernel_regularizer)(activation)
 
@@ -174,6 +171,7 @@ def _shortcut(input, residual):
                           kernel_size=(1, 1),
                           strides=(stride_width, stride_height),
                           padding="valid",
+                          data_format='channels_first',
                           kernel_initializer="he_normal",
                           kernel_regularizer=l2(0.0001))(input)
 
@@ -189,6 +187,7 @@ def basic_block(filters, init_strides=(1, 1), is_first_block_of_first_layer=Fals
             conv1 = Conv2D(filters=filters, kernel_size=(3, 3),
                            strides=init_strides,
                            padding="same",
+                           data_format='channels_first',
                            kernel_initializer="he_normal",
                            kernel_regularizer=l2(1e-4))(input)
         else:
@@ -218,9 +217,9 @@ def _handle_dim_ordering():
     global ROW_AXIS
     global COL_AXIS
     global CHANNEL_AXIS
-    ROW_AXIS = 1
-    COL_AXIS = 2
-    CHANNEL_AXIS = 3
+    ROW_AXIS = 2
+    COL_AXIS = 3
+    CHANNEL_AXIS = 1
 
 
 def _get_block(identifier):
@@ -239,16 +238,13 @@ class ResnetBuilder(object):
         if len(input_shape) != 3:
             raise Exception("Input shape should be a tuple (nb_channels, nb_rows, nb_cols)")
 
-        # Permute dimension order if necessary
-        input_shape = (input_shape[1], input_shape[2], input_shape[0])
-
         # Load function from str if needed.
         block_fn = _get_block(block_fn)
         
         img_input = Input(shape = input_shape)
                 
         conv1 = _conv_bn_relu(filters = 64, kernel_size = (7, 7), strides = (2, 2))(img_input)
-        pool1 = MaxPooling2D(pool_size = (3, 3), strides = (2, 2), padding="same")(conv1)
+        pool1 = MaxPooling2D(pool_size = (3, 3), strides = (2, 2), data_format='channels_first', padding="same")(conv1)
 
         block = pool1
         filters = 64
@@ -263,22 +259,22 @@ class ResnetBuilder(object):
         return model
 
     @staticmethod
-    def build_resnet_34(input_shape, input_tensor):
-        return ResnetBuilder.build(input_shape, basic_block, [3, 4, 6, 3], input_tensor)
+    def build_resnet(input_shape, input_tensor):
+        return ResnetBuilder.build(input_shape, basic_block, [3, 4, 6], input_tensor)
 
 
-#=============U-Net with ResNet34 Encoder============
-def UResNet34(input_shape=(None, None, 3), classes=1, decoder_filters=16, decoder_block_type='upsampling',
+#=============U-Net with ResNet Encoder============
+def UResNet(input_shape=(3, None, None), classes=1, decoder_filters=16, decoder_block_type='upsampling',
                        encoder_weights=None, input_tensor=None, activation='sigmoid', **kwargs):
 
-    backbone = ResnetBuilder.build_resnet_34(input_shape = input_shape, input_tensor = input_tensor)
+    backbone = ResnetBuilder.build_resnet(input_shape = input_shape, input_tensor = input_tensor)
     
-    skip_connections = list([])#([97,54,25])  # for resnet 34
-    #print("sc done")
+    skip_connections = list([54, 25, 3])
+
     model = build_unet(backbone, classes, decoder_filters,
                        skip_connections, block_type=decoder_block_type,
                        activation=activation, **kwargs)
-    #print("bu done")
+
     model._name = 'u-resnet34'
 
     return model
