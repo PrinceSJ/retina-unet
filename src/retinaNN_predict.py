@@ -212,7 +212,7 @@ plt.legend(loc = "lower right")
 plt.savefig(save_path + "_Precision_recall.png")
 
 # Confusion matrix
-confusion = np.array([[true_positives[99], false_positives[99]], [true_negatives[99], false_negatives[99]]])
+confusion = np.array([[true_positives[99], false_positives[99]], [false_negatives[99], true_negatives[99]]])
 confusion /= np.sum(confusion)
 print(confusion)
 
