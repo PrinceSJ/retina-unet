@@ -211,7 +211,7 @@ plt.ylabel("Precision")
 plt.legend(loc = "lower right")
 plt.savefig(save_path + "_Precision_recall.png")
 
-# Confusion matrix
+# Confusion matrix (take threshold of 0.5)
 confusion = np.array([[true_positives[99], false_positives[99]], [false_negatives[99], true_negatives[99]]])
 confusion /= np.sum(confusion)
 print(confusion)
@@ -235,7 +235,7 @@ print("Precision: " +str(precision))
 #Save the results
 with open(save_path + '_performances.txt', 'w') as file:
     file.write(
-        "Confusion matrix:"
+        "Confusion matrix:\n"
         + str(confusion)
         + "\nACCURACY: " + str(accuracy)
         + "\nSENSITIVITY: " + str(sensitivity)
