@@ -13,6 +13,8 @@ PATCH_SIZE = (
     int(config.get('data attributes', 'patch_width'))
 )
 
+DRIVE_TRAINING = 'DRIVE' in config.get('experiment', 'name')
+
 def load_testset(filepath, batch_size):
     # This works with arrays as well
     dataset = tf.data.TFRecordDataset(glob.glob(filepath))
@@ -98,6 +100,11 @@ def _parse_function(proto):
     
     # Turn your saved image string into an array
     image = decode_png(parsed_features['image'])
+
+    # add normal noise if training on Synth data
+    if not DRIVE_TRAINING:
+        image = image + np.random.normal(scale=1.5, size=image.shape)
+
     label = decode_png(parsed_features['label'])
 
 
