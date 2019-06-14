@@ -26,8 +26,10 @@ Synth_testimgs = subimgs_per_img * Synth_imgs_test
 imgs_to_visualize = global_config.get('global', 'imgs_to_visualize')
 
 # first is train second test
-settings = ['DRIVE', 'Synth']
-archs = ['unet'] #['unet','resnet']
+# settings = ['DRIVE', 'Synth']
+settings = ['DRIVE']
+settings = ['Synth']
+archs = ['resnet'] #['unet','resnet']
 
 for arch in archs:
   for trainset in settings:
@@ -47,7 +49,7 @@ for arch in archs:
       config.write(f)
     
     ### run training
-    # os.system('python run_training.py')
+    os.system('python run_training.py')
     
     for testset in settings:
       config.set('experiment', 'testset', testset)

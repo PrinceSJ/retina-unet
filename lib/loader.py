@@ -71,7 +71,7 @@ def normalize(image, label):
     image = tf.cast(image, tf.float32) / 255. * 6. - 3.    # normalize to [-3, 3]
     label = tf.cast(label, tf.float32) / 255.         # label from 0 - 1
 
-    foreground = tf.cast(label > 0.4, tf.float32)
+    foreground = tf.cast(label > 0.2, tf.float32)
     bkgrnd = 1 - foreground
     label = tf.concat([bkgrnd, foreground], 0)
 

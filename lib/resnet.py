@@ -67,7 +67,7 @@ def Transpose2D_block(filters, stage, kernel_size=(3,3), upsample_rate=(2,2),
 def build_unet(backbone, classes, last_block_filters, skip_layers,
                n_upsample_blocks=5, upsample_rates=(2,2,2,2,2),
                block_type='upsampling', activation='sigmoid',
-               withActivation=False,
+               with_activation=False,
                **kwargs):
 
     input = backbone.input
@@ -96,8 +96,10 @@ def build_unet(backbone, classes, last_block_filters, skip_layers,
         activation = 'sigmoid'
    
     x = Conv2D(classes, (3,3), padding='same', data_format='channels_first', name='final_conv')(x)
-    if withActivation:
-        x = Activation(activation, name=activation)(x)
+    
+    if not with_activation:
+        activation = 'linear'
+    x = Activation(activation, name=activation)(x)
 
     model = Model(input, x)
 
@@ -277,7 +279,7 @@ def UResNet(input_shape=(3, None, None), classes=1, decoder_filters=16, decoder_
                        skip_connections, block_type=decoder_block_type,
                        activation=activation, **kwargs)
 
-    model._name = 'u-resnet34'
+    model._name = 'u-resnet'
 
     return model
 

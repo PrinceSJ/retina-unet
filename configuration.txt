@@ -7,7 +7,7 @@ test_data_stats = ./Synth_datasets/stats_test.txt
 
 [experiment]
 name = Synth_training
-arch = unet
+arch = resnet
 testset = Synth
 
 [data attributes]

@@ -17,6 +17,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.metrics import BinaryAccuracy, Precision, Recall, TruePositives, TrueNegatives, FalsePositives, FalseNegatives
 import tensorflow as tf
 import tensorflow.keras.backend as K
+from tensorflow.keras.utils import plot_model as plot
 
 import sys
 sys.path.insert(0, './lib/')
@@ -112,9 +113,9 @@ best_last = config.get('testing settings', 'best_last')
 
 #Load the saved model
 if u_net:
-    model = get_unet(1, batch_size, patch_size[0], patch_size[1], withActivation=True)  #the U-net model
+    model = get_unet(1, batch_size, patch_size[0], patch_size[1], with_activation=True)  #the U-net model
 else:
-    model = UResNet(input_shape=(1, patch_size[0], patch_size[1]), withActivation=True)
+    model = UResNet(input_shape=(1, patch_size[0], patch_size[1]), with_activation=True)
 
 thresholds = np.linspace(0, 1, 200).tolist()
 model.compile(
@@ -128,6 +129,8 @@ model.compile(
         FalseNegatives(thresholds = thresholds) # confusion
     ]
 )
+plot(model, to_file = experiment_path + '/' + name_experiment + '_model_test.png')   #check how the model looks like
+print(experiment_path + '/' + name_experiment + '_' + best_last + '_weights.h5')
 model.load_weights(experiment_path + '/' + name_experiment + '_' + best_last + '_weights.h5')
 
 print("start prediction")

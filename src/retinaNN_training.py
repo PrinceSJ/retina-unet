@@ -77,7 +77,7 @@ test_dataset, train_dataset = load_trainset(
 if u_net:
     model = get_unet(1, batch_size, patch_size[0], patch_size[1])  #the U-net model
 else:
-    model = UResNet(input_shape=(1, patch_size[0], patch_size[1]), n_upsample_blocks = 4)
+    model = UResNet(input_shape=(1, patch_size[0], patch_size[1]), classes=2, n_upsample_blocks = 4)
 
 model.compile(
     optimizer = 'adam',
@@ -112,8 +112,7 @@ tensorboard = ImageTensorBoard(
 )
 
 earlyStopping = EarlyStopping(
-    min_delta=1e-5,
-    patience=10,
+    patience=30,
     mode='min',
 )
 
