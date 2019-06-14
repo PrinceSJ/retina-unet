@@ -1,10 +1,13 @@
 
 import configparser
 import os
+import sys
+sys.path.insert(0, './src/')
+from cli_helper import parse_opts
+
 
 global_config = configparser.RawConfigParser()
 global_config.read('./global_config.txt')
-
 
 stats_parser = configparser.RawConfigParser()
 stats_parser.read('./DRIVE_datasets/stats_train.txt')
@@ -26,13 +29,10 @@ Synth_testimgs = subimgs_per_img * Synth_imgs_test
 imgs_to_visualize = global_config.get('global', 'imgs_to_visualize')
 
 # first is train second test
-# settings = ['DRIVE', 'Synth']
-settings = ['DRIVE']
-settings = ['Synth']
-archs = ['unet'] #['unet','resnet']
+trainsets, testsets, archs, only_training, only_testing = parse_opts()
 
 for arch in archs:
-  for trainset in settings:
+  for trainset in trainsets:
     config = configparser.RawConfigParser()
     config.read('./configuration_template.txt')
     ### write config
@@ -49,9 +49,10 @@ for arch in archs:
       config.write(f)
     
     ### run training
-    os.system('python run_training.py')
+    if not only_testing:
+      os.system('python run_training.py')
     
-    for testset in settings:
+    for testset in testsets:
       config.set('experiment', 'testset', testset)
       config.set('data paths', 'test_data_path', './' + testset + '_datasets/dataset__test*.tfrecord')
       config.set('data paths', 'test_data_stats', './' + testset + '_datasets/stats_test.txt')
@@ -61,4 +62,5 @@ for arch in archs:
       with open('configuration.txt', "w") as f:
         config.write(f)
 
-      os.system('python run_testing.py')
+      if not only_training:
+        os.system('python run_testing.py')

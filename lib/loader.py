@@ -101,14 +101,21 @@ def _parse_function(proto):
     
     # Turn your saved image string into an array
     image = decode_png(parsed_features['image'])
+    label = decode_png(parsed_features['label'])
+
+    # Bring your picture back in shape
+    image = tf.reshape(image, [1, PATCH_SIZE[0], PATCH_SIZE[1]])
+    label = tf.reshape(label, [1, PATCH_SIZE[0], PATCH_SIZE[1]])
 
     # add normal noise if training on Synth data
     if not DRIVE_TRAINING:
+        print(image.shape)
+        print((PATCH_SIZE[0], PATCH_SIZE[1]))
         image = tf.cast(
             K.clip(
                 tf.add(
                     tf.cast(image, tf.float32),
-                    np.random.normal(scale=1.5, size=(PATCH_SIZE[0], PATCH_SIZE[1]))
+                    np.random.normal(scale=1.5, size=(1, PATCH_SIZE[0], PATCH_SIZE[1]))
                 ),
                 0,
                 255
@@ -116,11 +123,4 @@ def _parse_function(proto):
             tf.uint8
         )
 
-    label = decode_png(parsed_features['label'])
-
-
-    # Bring your picture back in shape
-    image = tf.reshape(image, [1, PATCH_SIZE[0], PATCH_SIZE[1]])
-    label = tf.reshape(label, [1, PATCH_SIZE[0], PATCH_SIZE[1]])
-    
     return image, label
