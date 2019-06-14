@@ -24,7 +24,7 @@ config.read('./global_config.txt')
 height = 565
 width = 565
 
-PROCESSES = 8
+PROCESSES = 1
 
 patch_h = int(config.get('data attributes', 'patch_height'))
 patch_w = int(config.get('data attributes', 'patch_width'))
@@ -85,13 +85,19 @@ class Writer():
     def close(self):
         self.current_writer.close()
 
-def process_img(i, filename, imgs_dir, groundTruth_dir):
+def process_img(i, filename, imgs_dir, groundTruth_dir, add_noise):
     #original
     img = np.asarray(Image.open(imgs_dir + filename).convert('L'))
     g_truth = np.asarray(Image.open(groundTruth_dir + filename).convert('L'))
+
+    if add_noise:
+        half_shape = (np.asarray(img.shape) / 2.).astype(np.int)
+        noise = cv2.resize(np.random.normal(scale=2, size=half_shape), dsize=img.shape)
+        img = np.clip(img + noise, 0, 255).astype(np.uint8)
+    
     img = np.reshape(img, (1, 1, img.shape[0], img.shape[1]))
     g_truth = np.reshape(g_truth, (1, 1, g_truth.shape[0], g_truth.shape[1]))
-    
+
     # test imgs
     assert(np.max(img)<=255)
     assert(np.min(img)>=0)
@@ -145,7 +151,8 @@ def get_datasets(
     imgs_dir,
     groundTruth_dir,
     borderMasks_dir,
-    train_test="null"
+    train_test="null",
+    add_noise=False
 ):
     global mean_img, var_img, mean_gt, var_gt, writer, new_img_size, n_subimgs, PROCESSES
     
@@ -185,7 +192,7 @@ def get_datasets(
             fr = i * 1000
             to = min(i * 1000 + batch_size, len(files))
             for j in range(fr, to):
-                r = pool.apply_async(process_img, [j, files[j], imgs_dir, groundTruth_dir], callback=myCallback, error_callback=print)
+                r = pool.apply_async(process_img, [j, files[j], imgs_dir, groundTruth_dir, add_noise], callback=myCallback, error_callback=print)
                 processes.append(r)
             for r in processes:
                 r.wait()
@@ -211,7 +218,7 @@ def get_datasets(
         f.write('std_groundtruths = ' + str(std_gt) + '\n')
     writer.close()
 
-def prepare_dataset(configuration):
+def prepare_dataset(configuration, add_noise=False):
 
     dataset_path = configuration['path']
 
@@ -226,7 +233,8 @@ def prepare_dataset(configuration):
         configuration['original_imgs_train'],
         configuration['groundTruth_imgs_train'],
         configuration['borderMasks_imgs_train'],
-        "train"
+        "train",
+        add_noise
     )
     print("train data done!")
 
@@ -237,50 +245,15 @@ def prepare_dataset(configuration):
         configuration['original_imgs_test'],
         configuration['groundTruth_imgs_test'],
         configuration['borderMasks_imgs_test'],
-        "test"
+        "test",
+        add_noise
     )
     print("test data done!")
-
-def get_data(imgs, gts, subimgs, test_train):
-    if test_train == 'train':
-        img_patches, gt_patches = get_data_training(
-            imgs,
-            gts,
-            patch_h,
-            patch_w,
-            subimgs,
-            inside_FOV = config.getboolean('data attributes', 'inside_FOV') #select the patches only inside the FOV  (default == True)
-        )
-        print(img_patches.shape)
-        permutation = np.random.permutation(img_patches.shape[0])
-        img_patches, gt_patches = img_patches[permutation], gt_patches[permutation]
-    elif average_mode:
-        img_patches, _, _, gt_patches = get_data_testing_overlap(
-            imgs,
-            gts,
-            imgs.shape[0],
-            patch_h,
-            patch_w,
-            stride_h,
-            stride_w
-        )
-    else:
-        img_patches, _, _, gt_patches = get_data_testing(
-            imgs,
-            gts,
-            imgs.shape[0],
-            patch_h,
-            patch_w
-        )
-
-    return img_patches, gt_patches
-
-
 
 if __name__ == '__main__':
     print("")
     print("processing Synth dataset")
-    prepare_dataset(config['Synth'])
+    prepare_dataset(config['Synth'], add_noise=True)
     print("")
-    print("processing DRIVE dataset")
-    prepare_dataset(config['DRIVE'])
+    # print("processing DRIVE dataset")
+    # prepare_dataset(config['DRIVE'])
