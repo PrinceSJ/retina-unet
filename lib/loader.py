@@ -4,6 +4,7 @@ import tensorflow as tf
 import glob
 from tensorflow.io import decode_png
 import tensorflow.keras.backend as K
+import numpy as np
 
 config = configparser.RawConfigParser()
 config.read('configuration.txt')
@@ -103,7 +104,17 @@ def _parse_function(proto):
 
     # add normal noise if training on Synth data
     if not DRIVE_TRAINING:
-        image = image + np.random.normal(scale=1.5, size=image.shape)
+        image = tf.cast(
+            K.clip(
+                tf.add(
+                    tf.cast(image, tf.float32),
+                    np.random.normal(scale=1.5, size=(PATCH_SIZE[0], PATCH_SIZE[1]))
+                ),
+                0,
+                255
+            ),
+            tf.uint8
+        )
 
     label = decode_png(parsed_features['label'])
 

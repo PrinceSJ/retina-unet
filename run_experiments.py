@@ -29,7 +29,7 @@ imgs_to_visualize = global_config.get('global', 'imgs_to_visualize')
 # settings = ['DRIVE', 'Synth']
 settings = ['DRIVE']
 settings = ['Synth']
-archs = ['resnet'] #['unet','resnet']
+archs = ['unet'] #['unet','resnet']
 
 for arch in archs:
   for trainset in settings:
