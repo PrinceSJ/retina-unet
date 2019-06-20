@@ -92,8 +92,8 @@ else:
     model = UResNet(input_shape=(1, patch_size[0], patch_size[1]), classes=2, n_upsample_blocks = 4)
 
 model.compile(
-    optimizer = 'adam',
-    loss = weighted_cross_entropy(0.9 / 0.1),
+    optimizer = 'sgd',
+    loss = weighted_cross_entropy(2),
     # loss = 'categorical_crossentropy',
     metrics = [accuracy]
 )
