@@ -52,6 +52,8 @@ def parse_opts():
                 only_training = True
             elif arg[2:] == 'only-testing':
                 only_testing = True
+            else:
+                currKey = ''
         elif not currKey == '':
             eval(currKey).append(arg)
     
@@ -63,11 +65,11 @@ def parse_opts():
         archs = ['resnet', 'unet']
 
     for i in range(len(trainsets)):
-        if finetune[i] == '_':
+        if len(finetune) > i and finetune[i] == '_':
             finetune[i] = None
-        if not finetune[i]:
+        elif len(finetune) > i and (not finetune[i] == 'Synth' or finetune[i] == 'DRIVE') or len(finetune) <= i:
             finetune.append(None)
-    
+
     assert(len(trainsets) == len(finetune))
 
     return trainsets, testsets, finetune, archs, only_training, only_testing
