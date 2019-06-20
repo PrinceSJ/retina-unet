@@ -187,7 +187,7 @@ eval_values = model.evaluate(
     dataset,
     batch_size = batch_size,
     steps = int(N_subimgs / batch_size),
-    verbose = 2
+    verbose = 1
 )
 
 _, acc, true_positives, false_positives, true_negatives, false_negatives = eval_values

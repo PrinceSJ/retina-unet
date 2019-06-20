@@ -24,7 +24,7 @@ config.read('./global_config.txt')
 height = 565
 width = 565
 
-PROCESSES = 1
+PROCESSES = 8
 
 patch_h = int(config.get('data attributes', 'patch_height'))
 patch_w = int(config.get('data attributes', 'patch_width'))
