@@ -5,7 +5,6 @@ import sys
 sys.path.insert(0, './src/')
 from cli_helper import parse_opts
 
-
 global_config = configparser.RawConfigParser()
 global_config.read('./global_config.txt')
 
@@ -29,10 +28,10 @@ Synth_testimgs = subimgs_per_img * Synth_imgs_test
 imgs_to_visualize = global_config.get('global', 'imgs_to_visualize')
 
 # first is train second test
-trainsets, testsets, archs, only_training, only_testing = parse_opts()
+trainsets, testsets, finetune, archs, only_training, only_testing = parse_opts()
 
 for arch in archs:
-  for trainset in trainsets:
+  for trainset, finetune_set in zip(trainsets, finetune):
     config = configparser.RawConfigParser()
     config.read('./configuration_template.txt')
     ### write config
@@ -44,6 +43,14 @@ for arch in archs:
     config.set('data paths', 'train_data_stats', './' + trainset + '_datasets/stats_train.txt')
 
     config.set('training settings', 'N_subimgs', eval(trainset + '_subimgs'))
+
+    ### apply finetuning
+    config.set('training settings', 'finetune', False)
+    if finetune_set:
+      config.set('training settings', 'finetune', True)
+      config.set('data paths', 'finetune_data_path', './' + finetune_set + '_datasets/dataset__train*.tfrecord')
+      config.set('data paths', 'finetune_data_stats', './' + finetune_set + '_datasets/stats_train.txt')
+      config.set('training settings', 'finetune_subimgs', eval(finetune_set + '_subimgs'))
 
     with open('configuration.txt', "w") as f:
       config.write(f)
