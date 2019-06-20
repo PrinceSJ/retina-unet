@@ -52,6 +52,11 @@ patch_size = (
     int(config.get('data attributes', 'patch_width'))
 )
 
+#finetune settings
+finetune = config.get('training settings', 'finetune') == 'True'
+if finetune:
+    finetune_path = config.get('data paths', 'train_data_path')
+    finetune_subimgs = int(config.get('training settings', 'finetune_subimgs'))
 
 #========= Save a sample of what you're feeding to the neural network ==========
 patches_imgs_samples, patches_gts_samples = load_images_labels(
@@ -72,6 +77,13 @@ test_dataset, train_dataset = load_trainset(
     batch_size,
     N_subimgs
 )
+
+if finetune:
+    test_finetune, train_finetune = load_trainset(
+        finetune_path,
+        batch_size,
+        finetune_subimgs
+    )
 
 #=========== Construct and save the model arcitecture ===========================
 if u_net:
@@ -123,6 +135,16 @@ model.fit(
     validation_steps = 10,
     verbose = 1,
     callbacks = [checkpointer, tensorboard, earlyStopping])
+
+if finetune:
+    model.fit(
+        finetune_dataset,
+        epochs = 10,
+        steps_per_epoch = min(int(N_subimgs / batch_size), 10000),
+        validation_data = test_finetune,
+        validation_steps = 10,
+        verbose = 1,
+        callbacks = [checkpointer, tensorboard, earlyStopping])
 
 #========== Save and test the last model ==================================
 model.save_weights(experiment_path + '/' + name_experiment +'_last_weights.h5', overwrite=True)
