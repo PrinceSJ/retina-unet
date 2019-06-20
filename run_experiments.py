@@ -35,7 +35,9 @@ for arch in archs:
     config = configparser.RawConfigParser()
     config.read('./configuration_template.txt')
     ### write config
-    experiment = trainset + '_training'
+    experiment = 'train_on_' + trainset
+    if finetune_set:
+      experiment = experiment + '_finetune'
     config.set('experiment', 'name', experiment)
     config.set('experiment', 'arch', arch)
     
